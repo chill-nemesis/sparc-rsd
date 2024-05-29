@@ -63,7 +63,7 @@ def _read_dicom_data(path: Path, force_reload: bool = False):
 
     return result
 
-
+### REGION SOLUTION
 def _map_color(
     colormap,
     base_color,
@@ -103,7 +103,7 @@ def _map_color(
     colormap[start:end, :] = rgba_colors
 
     return colormap
-
+### END REGION SOLUTION
 
 def create_xray(dicom_data: list[np.ndarray]):
     """Create "xray" images for a dicom sequence.
@@ -125,10 +125,15 @@ def create_xray(dicom_data: list[np.ndarray]):
     min_image = np.ones(dicom_data[0].shape) * 10000
     sum_image = np.zeros(dicom_data[0].shape)
 
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    ### REGION SOLUTION
     for dicom_slice in dicom_data:
         min_image = np.minimum(min_image, dicom_slice)
         max_image = np.maximum(max_image, dicom_slice)
         sum_image += dicom_slice
+    ### END REGION SOLUTION
 
     min_val = np.min(min_image)
     max_val = np.max(max_image)
@@ -146,11 +151,13 @@ def get_colormap():
     # modify the colormap here
     # The indices equal the HU+1000
     # colormap_data[0:100, :] = to_rgba("lightblue")
+    ### REGION SOLUTION
     colormap_data = _map_color(colormap_data, "lightblue", 0, 100)
     colormap_data = _map_color(colormap_data, "blue", 100, 500)
     colormap_data = _map_color(colormap_data, "lightyellow", 1300, 3000)
     colormap_data = _map_color(colormap_data, "red", 3000, 4000)
     colormap_data = _map_color(colormap_data, "purple", 1050, 1250)
+    ### END REGION SOLUTION
 
     return ListedColormap(colormap_data)
 
