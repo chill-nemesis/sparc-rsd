@@ -2,3 +2,9 @@
 data/
 .[vV]env
 [vV]env
+
+__pycache__
+
+*.bin
+
+*.vscode
