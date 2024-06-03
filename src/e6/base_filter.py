@@ -35,6 +35,8 @@ class BaseFilter2D:
 
         self._shape = (dim_x, dim_y if dim_y else dim_x)
 
+        self._cached_image: None | np.ndarray = None
+
     @property
     def get_x_dim(self) -> int:
         return self._shape[0]
@@ -51,13 +53,15 @@ class BaseFilter2D:
         self,
         image: np.ndarray,
         border_behaviour: BorderBehaviour = BorderBehaviour.WRAP,
+        force_refilter: bool = False,
     ) -> Any:
-        return self.filter(image, border_behaviour)
+        return self.filter(image, border_behaviour, force_refilter)
 
     def filter(
         self,
         image: np.ndarray,
         border_behaviour: BorderBehaviour = BorderBehaviour.WRAP,
+        force_refilter: bool = False,
     ) -> np.ndarray:
         """Apply the filter to an image.
 
@@ -70,6 +74,9 @@ class BaseFilter2D:
         Returns:
             np.ndarray: A filtered image.
         """
+        if self._cached_image is not None and not force_refilter:
+            return self._cached_image
+
         out_image = np.zeros(image.shape)
 
         for x in range(image.shape[0]):
@@ -82,6 +89,8 @@ class BaseFilter2D:
                         border_behaviour,
                     )
                 )
+
+        self._cached_image = out_image
 
         return out_image
 
