@@ -35,6 +35,9 @@ class BaseFilter2D:
     def shape(self):
         return self._shape
 
+    def invalidate_cache(self):
+        self._cached_image = None
+
     def __call__(
         self,
         image: np.ndarray,

@@ -177,18 +177,6 @@ def _main():
 
     image_data = read_dicom_data(Path("data/e5/series/"))
 
-    # image_data = [[None]]
-
-    # image_data[0] = np.array(
-    #     [
-    #         [0, 0, 0, 0, 0],
-    #         [0, 0, 3000, 3000, 0],
-    #         [0, 3000, 3000, 3000, 0],
-    #         [0, 3000, 3000, 3000, 0],
-    #         [0, 0, 0, 0, 0],
-    #     ]
-    # )
-
     show_window(
         [
             gauss_filter,
@@ -201,7 +189,7 @@ def _main():
             opening_filter,
             closing_filter,
         ],
-        image_data[0],
+        image_data,
     )
 
 
