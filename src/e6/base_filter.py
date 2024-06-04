@@ -7,20 +7,6 @@ from typing import Any
 import numpy as np
 
 
-class BorderBehaviour(Enum):
-    """Defines how filters handle border pixels.
-
-    WRAP: Wrap the values
-    REPEAT: Repeat the last value
-    EMPTY: Assume zero
-    ONLY_VALID: Only filter regions where we have valid data. This reduces the output picture size!
-    """
-
-    WRAP = auto()
-    REPEAT = auto()
-    ZERO = auto()
-
-
 class BaseFilter2D:
     def __init__(
         self,
@@ -52,16 +38,18 @@ class BaseFilter2D:
     def __call__(
         self,
         image: np.ndarray,
-        border_behaviour: BorderBehaviour = BorderBehaviour.WRAP,
         force_refilter: bool = False,
+        border_behaviour="wrap",
+        **kwargs,
     ) -> Any:
-        return self.filter(image, border_behaviour, force_refilter)
+        return self.filter(image, force_refilter, border_behaviour, **kwargs)
 
     def filter(
         self,
         image: np.ndarray,
-        border_behaviour: BorderBehaviour = BorderBehaviour.WRAP,
         force_refilter: bool = False,
+        border_behaviour="wrap",
+        **kwargs,
     ) -> np.ndarray:
         """Apply the filter to an image.
 
@@ -69,7 +57,7 @@ class BaseFilter2D:
 
         Args:
             image (np.ndarray): The input image. Must be a 2D image!
-            border_behaviour (BorderBehaviour, optional): Defines, how the filter handles pixels outside the input image boundaries. Defaults to BorderBehaviour.WRAP.
+            border_behaviour (optional): Defines, how the filter handles pixels outside the input image boundaries. See np.wrap for possible values. If set to None, only valid pixels will be considered and no padding applied.
 
         Returns:
             np.ndarray: A filtered image.
@@ -77,68 +65,36 @@ class BaseFilter2D:
         if self._cached_image is not None and not force_refilter:
             return self._cached_image
 
-        out_image = np.zeros(image.shape)
+        sliding_window_views = self._get_sub_views(image, border_behaviour, **kwargs)
 
-        for x in range(image.shape[0]):
-            for y in range(image.shape[1]):
-                out_image[x, y] = self._apply_filter_func(
-                    self._get_image_subarray(
-                        image,
-                        x,
-                        y,
-                        border_behaviour,
-                    )
-                )
+        vec_filter_func = np.vectorize(self._apply_filter_func, signature="(m,n)->()")
+        filtered_values = vec_filter_func(sliding_window_views)
+
+        out_image = np.zeros((sliding_window_views.shape[0], sliding_window_views.shape[1]))
+        out_image[:] = filtered_values.reshape(out_image.shape)
+
+        # for x in range(out_image.shape[0]):
+        #     for y in range(out_image.shape[1]):
+        #         out_image[x, y] = self._apply_filter_func(sliding_window_views[x, y])
 
         self._cached_image = out_image
 
         return out_image
 
-    def _get_image_subarray(
-        self,
-        image: np.ndarray,
-        x: int,
-        y: int,
-        border_behaviour: BorderBehaviour = BorderBehaviour.WRAP,
-    ):
-        subimage = np.zeros(
-            (self.get_x_dim, self.get_y_dim),
-            dtype=image.dtype,
+    def _get_sub_views(self, image: np.ndarray, border_behaviour, **kwargs):
+
+        # Do not add any new information/data to the array, only use the existing, valid pixels
+        if border_behaviour is None:
+            return np.lib.stride_tricks.sliding_window_view(image, self.shape)
+
+        padded_image = np.pad(
+            image,
+            pad_width=(self.get_x_dim // 2 + 1, self.get_y_dim // 2 + 1),
+            mode=border_behaviour,
+            **kwargs,
         )
 
-        half_filter_x = self.get_x_dim // 2
-        half_filter_y = self.get_y_dim // 2
-
-        for i in range(-half_filter_x, half_filter_x + 1):
-            for k in range(-half_filter_y, half_filter_y + 1):
-                sub_idx_x = i + half_filter_x
-                sub_idx_y = k + half_filter_y
-
-                img_idx_x = i + x
-                img_idx_y = k + y
-
-                match border_behaviour:
-                    ### REGION SOLUTION
-                    case BorderBehaviour.REPEAT:
-                        img_idx_x = min(max(img_idx_x, 0), image.shape[0] - 1)
-                        img_idx_y = min(max(img_idx_y, 0), image.shape[1] - 1)
-                        image_value = image[img_idx_x, img_idx_y]
-
-                    case BorderBehaviour.ZERO:
-                        if 0 <= img_idx_x < image.shape[0] and 0 <= img_idx_y < image.shape[1]:
-                            image_value = image[img_idx_x, img_idx_y]
-                        else:
-                            image_value = 0
-                    ### END REGION SOLUTION
-
-                    case _:  # default to wrapping if we do not know the border behaviour
-                        img_idx_x %= image.shape[0]
-                        img_idx_y %= image.shape[1]
-                        image_value = image[img_idx_x, img_idx_y]
-
-                subimage[sub_idx_x, sub_idx_y] = image_value
-
-        return subimage
+        return np.lib.stride_tricks.sliding_window_view(padded_image, self.shape)
 
     @abstractmethod
     def _apply_filter_func(self, selected_pixels: np.ndarray):
@@ -152,5 +108,5 @@ class BaseKernelFilter2D(BaseFilter2D):
         self.kernel = self._create_kernel()
 
     @abstractmethod
-    def _create_kernel(self) -> np.ndarray:
+    def _create_kernel(self):
         pass
