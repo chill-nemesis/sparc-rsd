@@ -1,23 +1,23 @@
+"""Provides a basic UI window for displaying filtered images."""
+
 import sys
 
 from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QComboBox, QStatusBar, QSlider
 from PySide6.QtCore import Slot, Qt
 
-from common.matplotlib_canvas import MPLCanvas
-from common.fancy_colormap import get_fancy_colormap
-
-from e6.base_filter import BaseFilter2D
-
-
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 
-
 import numpy as np
+
+from common.matplotlib_canvas import MPLCanvas
+from common.fancy_colormap import get_fancy_colormap
+
+from e6.base_filter import IFilter2D
 
 
 class E6Window(QMainWindow):
-    def __init__(self, filter_list: list[BaseFilter2D], images: list[np.ndarray]) -> None:
+    def __init__(self, filter_list: list[IFilter2D], images: list[np.ndarray]) -> None:
         super().__init__()
 
         self._images = images
@@ -108,7 +108,7 @@ class E6Window(QMainWindow):
     def _get_filtered_image(self):
         return self._get_active_filter()(self.active_image)
 
-    def _get_active_filter(self) -> BaseFilter2D:
+    def _get_active_filter(self) -> IFilter2D:
         return self._filters[self._selector.currentIndex()]
 
 

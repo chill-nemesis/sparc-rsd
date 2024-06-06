@@ -2,10 +2,11 @@ import numpy as np
 from pathlib import Path
 
 from common.read_dicom_data import read_dicom_data
-from e6.base_filter import BaseFilter2D, BaseKernelFilter2D
+from e6.base_filter import BaseFilter2D, BaseKernelFilter2D, IFilter2D
 from e6.ui import show_window
 
 
+# region solution
 class MedianFilter(BaseFilter2D):
     def _apply_filter_func(self, selected_pixels: np.ndarray):
         return np.median(selected_pixels)
@@ -16,9 +17,6 @@ class GaussFilter(BaseKernelFilter2D):
         self._sigma = sigma
 
         super().__init__(dim_x, dim_y)
-
-    def _apply_filter_func(self, selected_pixels: np.ndarray):
-        return np.sum(self.kernel * selected_pixels, axis=(0, 1))
 
     def _create_kernel(self) -> np.ndarray:
         kernel = np.zeros(self.shape, dtype=float)
@@ -161,7 +159,11 @@ class ClosingFilter(BaseFilter2D):
         pass
 
 
+# end region solution
+
+
 def _main():
+    # region solution
     kernel_size = 3
 
     gauss_filter = GaussFilter(kernel_size)
@@ -174,11 +176,17 @@ def _main():
 
     opening_filter = OpeningFilter(kernel_size)
     closing_filter = ClosingFilter(kernel_size)
+    # end region
 
-    image_data = read_dicom_data(Path("data/e5/series/"))
+    image_data = read_dicom_data(Path("data/series/"))
 
     show_window(
         [
+            # add your filter instances here!
+            # E.g.:
+            # GaussFilter(3),
+            # MedianFilter(3)
+            # region solution
             gauss_filter,
             median_filter,
             sobel_filter,
@@ -188,6 +196,7 @@ def _main():
             max_filter,
             opening_filter,
             closing_filter,
+            # end region solution
         ],
         image_data,
     )
