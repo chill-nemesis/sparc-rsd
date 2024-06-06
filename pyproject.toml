@@ -5,14 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rim_exercise"
 version = "0.1.0"
-dependencies = [
-	"pydicom",
-	"matplotlib",
-	"numpy"
-]
-authors = [
-	{ name = "Steffen Peikert", email = "steffen.peikert@fau.de" },
-]
+dependencies = ["pydicom", "matplotlib", "numpy", "PySide6"]
+authors = [{ name = "Steffen Peikert", email = "steffen.peikert@fau.de" }]
 description = "Exercise templates for lecture Robotics in Medicine"
 
 [project.optional-dependencies]
