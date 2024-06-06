@@ -2,7 +2,17 @@
 
 import sys
 
-from PySide6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QComboBox, QStatusBar, QSlider
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QComboBox,
+    QStatusBar,
+    QSlider,
+    QHBoxLayout,
+    QLayout,
+)
 from PySide6.QtCore import Slot, Qt
 
 import matplotlib.pyplot as plt
@@ -29,9 +39,14 @@ class E6Window(QMainWindow):
         _layout = QVBoxLayout(_central_widget)
         self.setCentralWidget(_central_widget)
 
-        self._selector = QComboBox()
-        self._selector.addItems([type(x).__name__ for x in self._filters])
-        self._selector.currentIndexChanged.connect(self.update_plot)
+        self._filter_selector = QComboBox()
+        self._filter_selector.addItems([type(x).__name__ for x in self._filters])
+        self._filter_selector.currentIndexChanged.connect(self.update_plot)
+
+        self._cmap_selector = QComboBox()
+        self._cmap_selector.addItems(["Grayscale color map", "Fancy color map"])
+        self._cmap_selector.setCurrentIndex(1)
+        self._cmap_selector.currentIndexChanged.connect(self._update_colormaps)
 
         # SLIDER MUST BE CREATED BEFORE THE PLOT IS DRAWN!
         self._slider = QSlider()
@@ -47,7 +62,12 @@ class E6Window(QMainWindow):
         _canvas = MPLCanvas(self._fig)
         _canvas.plot_value.connect(self._update_status_message)
 
-        _layout.addWidget(self._selector)
+        temp = QWidget()
+        _horizontal_layout = QHBoxLayout(temp)
+        _horizontal_layout.addWidget(self._filter_selector)
+        _horizontal_layout.addWidget(self._cmap_selector)
+        _horizontal_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        _layout.addWidget(temp)
         _layout.addWidget(_canvas)
         _layout.addWidget(self._slider)
 
@@ -68,7 +88,13 @@ class E6Window(QMainWindow):
     @Slot(int)
     def _update_preview_plot(self, _):
         self._slice_plot.set_data(self.active_image)
+        self._slice_plot.set_cmap(self._get_colormap())
         self._fig.canvas.draw_idle()
+
+    @Slot(int)
+    def _update_colormaps(self, index):
+        self._update_preview_plot(index)
+        self.update_plot(index)
 
     @property
     def num_images(self) -> int:
@@ -83,7 +109,7 @@ class E6Window(QMainWindow):
         axes = axis.flatten()
 
         normalized_cmap = Normalize(vmin=0, vmax=4000)
-        color_map = get_fancy_colormap()
+        color_map = self._get_colormap()
 
         self._slice_plot = axes[0].imshow(
             self.active_image,
@@ -103,16 +129,23 @@ class E6Window(QMainWindow):
     def update_plot(self, _: int):
         self._filtered_plot.set_data(self._get_active_filter()(self.active_image))
         self._filter_axis.set_title(f"{type(self._get_active_filter()).__name__}ed image")
+        self._filtered_plot.set_cmap(self._get_colormap())
         self._fig.canvas.draw_idle()
 
     def _get_filtered_image(self):
         return self._get_active_filter()(self.active_image)
 
     def _get_active_filter(self) -> IFilter2D:
-        return self._filters[self._selector.currentIndex()]
+        return self._filters[self._filter_selector.currentIndex()]
+
+    def _get_colormap(self):
+        if self._cmap_selector.currentIndex() == 0:
+            return "gray"
+        else:
+            return get_fancy_colormap()
 
 
-def show_window(filter_list: list[BaseFilter2D], images: list[np.ndarray]):
+def show_window(filter_list: list[IFilter2D], images: list[np.ndarray]):
     app = QApplication(sys.argv)
 
     window = E6Window(filter_list, images)
