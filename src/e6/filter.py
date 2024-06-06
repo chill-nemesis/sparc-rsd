@@ -36,6 +36,14 @@ class GaussFilter(BaseKernelFilter2D):
         return kernel
 
 
+class MotionBlurFilterX(BaseKernelFilter2D):
+    def _create_kernel(self):
+        kernel = np.zeros(self.shape)
+        kernel[self.get_x_dim // 2 + 1, :] = 1
+
+        return kernel / kernel.sum()
+
+
 class SobelFilter(BaseKernelFilter2D):
 
     def _apply_filter_func(self, selected_pixels: np.ndarray):
@@ -166,6 +174,7 @@ def _main():
     # region solution
     kernel_size = 3
 
+    blur_filter = MotionBlurFilterX(kernel_size)
     gauss_filter = GaussFilter(kernel_size)
     median_filter = MedianFilter(kernel_size)
     sobel_filter = SobelFilter(kernel_size)
@@ -187,6 +196,7 @@ def _main():
             # GaussFilter(3),
             # MedianFilter(3)
             # region solution
+            blur_filter,
             gauss_filter,
             median_filter,
             sobel_filter,
