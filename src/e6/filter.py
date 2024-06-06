@@ -47,11 +47,10 @@ class MotionBlurFilterX(BaseKernelFilter2D):
 class SobelFilter(BaseKernelFilter2D):
 
     def _apply_filter_func(self, selected_pixels: np.ndarray):
-        # Apply x sobel first
-        x_filter = np.sum(self.kernel[0] * selected_pixels, axis=(0, 1))
-        y_filter = np.sum(self.kernel[1] * selected_pixels, axis=(0, 1))
+        g_x = np.convolve(self.kernel[0].flatten(), selected_pixels.flatten(), mode="valid")[0]
+        g_y = np.convolve(self.kernel[1].flatten(), selected_pixels.flatten(), mode="valid")[0]
 
-        return (x_filter + y_filter) / 2
+        return np.sqrt(np.square(g_x) + np.square(g_y))
 
     def _create_kernel(self):
 
@@ -72,13 +71,13 @@ class SobelFilter(BaseKernelFilter2D):
 class XSobelFilter(SobelFilter):
 
     def _apply_filter_func(self, selected_pixels: np.ndarray):
-        return np.sum(self.kernel[0] * selected_pixels, axis=(0, 1))
+        return np.convolve(self.kernel[0].flatten(), selected_pixels.flatten(), mode="valid")[0]
 
 
 class YSobelFilter(SobelFilter):
 
     def _apply_filter_func(self, selected_pixels: np.ndarray):
-        return np.sum(self.kernel[1] * selected_pixels, axis=(0, 1))
+        return np.convolve(self.kernel[1].flatten(), selected_pixels.flatten(), mode="valid")[0]
 
 
 class ErosionFilter(BaseFilter2D):
