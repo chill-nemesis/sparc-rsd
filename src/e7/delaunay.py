@@ -132,31 +132,31 @@ class Tetrahedron:
             raise ValueError()
 
     def _calculate_circumsphere(self):
-        v0_2 = np.linalg.norm(self.vertices[0]) ** 2
-        v1 = self.vertices[1] - self.vertices[0]
-        v2 = self.vertices[2] - self.vertices[0]
-        v3 = self.vertices[3] - self.vertices[0]
+        # v0_2 = np.linalg.norm(self.vertices[0]) ** 2
+        # v1 = self.vertices[1] - self.vertices[0]
+        # v2 = self.vertices[2] - self.vertices[0]
+        # v3 = self.vertices[3] - self.vertices[0]
 
-        a = np.array([v1, v2, v3])
-        b = np.array(
-            [
-                [(np.linalg.norm(self.vertices[1]) ** 2 - v0_2) / 2],
-                [(np.linalg.norm(self.vertices[2]) ** 2 - v0_2) / 2],
-                [(np.linalg.norm(self.vertices[3]) ** 2 - v0_2) / 2],
-            ]
-        )
+        # a = np.array([v1, v2, v3])
+        # b = np.array(
+        #     [
+        #         [(np.linalg.norm(self.vertices[1]) ** 2 - v0_2) / 2],
+        #         [(np.linalg.norm(self.vertices[2]) ** 2 - v0_2) / 2],
+        #         [(np.linalg.norm(self.vertices[3]) ** 2 - v0_2) / 2],
+        #     ]
+        # )
 
-        center = np.linalg.solve(a, b).flatten()
-        radius = np.linalg.norm(self.vertices[0] - center)
+        # center = np.linalg.solve(a, b).flatten()
+        # radius = np.linalg.norm(self.vertices[0] - center)
 
-        radius_v0 = np.linalg.norm(self.vertices[0] - center)
-        radius_v1 = np.linalg.norm(self.vertices[1] - center)
-        radius_v2 = np.linalg.norm(self.vertices[2] - center)
-        radius_v3 = np.linalg.norm(self.vertices[3] - center)
+        # radius_v0 = np.linalg.norm(self.vertices[0] - center)
+        # radius_v1 = np.linalg.norm(self.vertices[1] - center)
+        # radius_v2 = np.linalg.norm(self.vertices[2] - center)
+        # radius_v3 = np.linalg.norm(self.vertices[3] - center)
 
-        assert abs(radius_v0 - radius_v1) < 1 and abs(radius_v0 - radius_v2) < 1 and abs(radius_v0 - radius_v3) < 1
+        # assert abs(radius_v0 - radius_v1) < 1 and abs(radius_v0 - radius_v2) < 1 and abs(radius_v0 - radius_v3) < 1
 
-        return Sphere(center, radius)
+        # return Sphere(center, radius)
 
         # Alternative method
         v1 = self.vertices[1] - self.vertices[0]
@@ -323,24 +323,13 @@ def _create_random_points(xdim, ydim, zdim, n):
     ).T
 
 
-def _create_mesh_points(xdim, ydim, zdim, n):
-
-    x, y, z = np.meshgrid(
-        np.linspace(-xdim, xdim, n),
-        np.linspace(-ydim, ydim, n),
-        np.linspace(-zdim, zdim, n),
-    )
-
-    return np.vstack([x.ravel(), y.ravel(), z.ravel()]).T
-
-
 def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--num-points",
         "-n",
         type=int,
-        default=5,
+        default=50,
     )
     parser.add_argument(
         "--xdim",
@@ -361,31 +350,14 @@ def _main():
         default=100,
     )
 
-    parser.add_argument(
-        "--grid",
-        action="store_true",
-        default=True,
-    )
-
     args = parser.parse_args()
 
-    points = (
-        _create_mesh_points(
-            args.xdim,
-            args.ydim,
-            args.zdim,
-            args.num_points,
-        )
-        if args.grid
-        else _create_random_points(
-            args.xdim,
-            args.ydim,
-            args.zdim,
-            args.num_points,
-        )
+    points = _create_random_points(
+        args.xdim,
+        args.ydim,
+        args.zdim,
+        args.num_points,
     )
-
-    np.random.seed(0)
 
     BowyerWatsonVisualiser(points)
 
