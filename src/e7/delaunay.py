@@ -1,34 +1,10 @@
-import numpy as np
+"""Code template for exercise 7 - delaunay triangulation"""
 
 import argparse
 from collections import defaultdict
 
+import numpy as np
 import open3d as o3d
-
-
-class AABB:
-    def __init__(self, points: np.ndarray):
-        self._min = points.min(axis=0)
-        self._max = points.max(axis=0)
-
-        self._center = (self.min + self.max) / 2
-        self._size = np.linalg.norm(self.max - self.min)
-
-    @property
-    def min(self):
-        return self._min
-
-    @property
-    def max(self):
-        return self._max
-
-    @property
-    def center(self):
-        return self._center
-
-    @property
-    def size(self):
-        return self._size
 
 
 class Sphere:
@@ -40,6 +16,8 @@ class Sphere:
         self._center = center[:3]
         self._radius = abs(radius)
 
+        self._mesh = self._create_mesh()
+
     @property
     def center(self):
         return self._center
@@ -48,11 +26,37 @@ class Sphere:
     def radius(self):
         return self._radius
 
+    @property
+    def mesh(self):
+        return self._mesh
+
     def is_point_in_sphere(self, point: np.ndarray):
         assert len(point.shape) == 1
         assert point.shape[0] >= 3
 
         return np.linalg.norm(point - self.center) <= self.radius
+
+    def _create_mesh(self):
+        sphere = o3d.geometry.TriangleMesh.create_sphere(self.radius)
+        sphere.translate(self.center)
+        sphere.compute_vertex_normals()
+
+        lines = []
+        for triangle in sphere.triangles:
+            triangle = triangle.tolist()
+            lines.extend(
+                [
+                    [triangle[0], triangle[1]],
+                    [triangle[1], triangle[2]],
+                    [triangle[2], triangle[0]],
+                ]
+            )
+
+        # Create the line set
+        return o3d.geometry.LineSet(
+            points=sphere.vertices,
+            lines=o3d.utility.Vector2iVector(lines),
+        )
 
 
 class Tetrahedron:
@@ -200,14 +204,19 @@ class BowyerWatsonVisualiser:
         # setup visualization
         self._renderer = o3d.visualization.VisualizerWithKeyCallback()
         self._renderer.register_key_callback(32, self._next_iteration)
+        self._renderer.register_key_callback(85, self._draw)
+        self._renderer.register_key_callback(80, self._toggle_pcd)
+        self._renderer.register_key_callback(257, self._finalize_iteration)
         self._renderer.create_window()
+
+        # create a pointcloud of all our points we want to add
+        self._pcd = o3d.geometry.PointCloud()
+        self._pcd.points = o3d.utility.Vector3dVector(self._points)
+        self._draw_pcd = True
 
         # Adding the mesh once sets the camera bb (which is not updated by draw)
         self._renderer.add_geometry(self._super_tetrahedron.mesh)
         self._draw()
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(self._points)
-        self._renderer.add_geometry(pcd)
 
         self._renderer.run()
 
@@ -216,12 +225,23 @@ class BowyerWatsonVisualiser:
 
     def _next_iteration(self, vis):
         try:
-            self._iteration(next(iter(self._point_iter)))
+            self._iteration(next(self._point_iter))
         except StopIteration:
             # if no more elements are available, clean up
             self._clean_up()
 
         self._draw()
+
+    def _finalize_iteration(self, vis):
+        for idx in self._point_iter:
+            self._iteration(idx)
+
+        self._clean_up()
+        self._draw()
+
+    def _toggle_pcd(self, vis):
+        self._draw_pcd = not self._draw_pcd
+        self._draw(vis)
 
     def _iteration(self, point_idx):
         point = self._points[point_idx]
@@ -254,18 +274,24 @@ class BowyerWatsonVisualiser:
             self._triangulation.append(Tetrahedron(self._vertices, indices))
 
     def _create_super_tetrahedron_points(self):
-        aabb = AABB(self._points)
+        # Create the encompassing sphere of all points
+        center = np.mean(self._points, axis=0)
+        radius = np.max(np.linalg.norm(self._points - center, axis=1))
+
+        # place that sphere within a regular tetrahedron
+        tetra_edge_length = 12 * radius / np.sqrt(6)
+        a = tetra_edge_length / (2 * np.sqrt(2))
 
         vertices = np.array(
             [
-                np.array([2 * aabb.size, 0, -aabb.size]),
-                np.array([-aabb.size, 2 * aabb.size, -aabb.size]),
-                np.array([-aabb.size, -aabb.size, 2 * aabb.size]),
-                np.array([-aabb.size, -aabb.size, -aabb.size]),
+                [a, a, a],
+                [a, -a, -a],
+                [-a, a, -a],
+                [-a, -a, a],
             ]
         )
 
-        vertices += aabb.center
+        vertices += center
 
         return vertices
 
@@ -274,34 +300,14 @@ class BowyerWatsonVisualiser:
         # I.e., no index belongs to the supertetrahedron vertices
         self._triangulation = [tetra for tetra in self._triangulation if not tetra.is_super_tetrahedron]
 
-    def _draw(self):
+    def _draw(self, vis=None):
         self._renderer.clear_geometries()
 
         for tetra in sorted(self._triangulation, key=lambda x: x.is_super_tetrahedron):
             self._renderer.add_geometry(tetra.mesh, reset_bounding_box=False)
 
-            # sphere = o3d.geometry.TriangleMesh.create_sphere(tetra._circumsphere.radius)
-            # sphere.translate(tetra._circumsphere.center)
-            # sphere.compute_vertex_normals()
-
-            # lines = []
-            # for triangle in sphere.triangles:
-            #     triangle = triangle.tolist()
-            #     lines.extend(
-            #         [
-            #             [triangle[0], triangle[1]],
-            #             [triangle[1], triangle[2]],
-            #             [triangle[2], triangle[0]],
-            #         ]
-            #     )
-
-            # # Create the line set
-            # line_set = o3d.geometry.LineSet(
-            #     points=sphere.vertices,
-            #     lines=o3d.utility.Vector2iVector(lines),
-            # )
-
-            # self._renderer.add_geometry(line_set, reset_bounding_box=False)
+        if self._draw_pcd:
+            self._renderer.add_geometry(self._pcd, reset_bounding_box=False)
 
         self._renderer.update_renderer()
 
@@ -358,7 +364,7 @@ def _main():
     parser.add_argument(
         "--grid",
         action="store_true",
-        default=False,
+        default=True,
     )
 
     args = parser.parse_args()
