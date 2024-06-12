@@ -192,12 +192,12 @@ class Tetrahedron:
 
 class BowyerWatsonVisualiser:
     def __init__(self, points: np.ndarray) -> None:
-        self._points = points
-        self._point_iter = iter(range(len(self._points)))
+        self._point_iter = iter(range(len(points)))
 
-        self._vertices = np.zeros((4 + len(points), 3))
-        self._vertices[:4] = self._create_super_tetrahedron_points()
-        self._super_tetrahedron = Tetrahedron(self._vertices, np.arange(4))
+        self._points = np.zeros((4 + len(points), 3))
+        self._points[4:] = points
+        self._points[:4] = self._create_super_tetrahedron_points()
+        self._super_tetrahedron = Tetrahedron(self._points, np.arange(4))
 
         self._triangulation = [self._super_tetrahedron]
 
@@ -211,7 +211,7 @@ class BowyerWatsonVisualiser:
 
         # create a pointcloud of all our points we want to add
         self._pcd = o3d.geometry.PointCloud()
-        self._pcd.points = o3d.utility.Vector3dVector(self._points)
+        self._pcd.points = o3d.utility.Vector3dVector(self._points[4:])
         self._draw_pcd = True
 
         # Adding the mesh once sets the camera bb (which is not updated by draw)
@@ -225,7 +225,7 @@ class BowyerWatsonVisualiser:
 
     def _next_iteration(self, vis):
         try:
-            self._iteration(next(self._point_iter))
+            self._iteration(next(self._point_iter) + 4)
         except StopIteration:
             # if no more elements are available, clean up
             self._clean_up()
@@ -234,7 +234,7 @@ class BowyerWatsonVisualiser:
 
     def _finalize_iteration(self, vis):
         for idx in self._point_iter:
-            self._iteration(idx)
+            self._iteration(idx + 4)
 
         self._clean_up()
         self._draw()
@@ -246,6 +246,27 @@ class BowyerWatsonVisualiser:
     def _iteration(self, point_idx):
         point = self._points[point_idx]
 
+        # Step 1: Check if the point is in the circumcircle of the tetrahedron
+        # Hints:
+        # - I conveniently implemented is_point_in_circumsphere in the tetrahedra-class
+        # - All triangulation-tetrahedra are in the self._triangulations list
+
+        # Step 2: Find all faces of the bad tetrahedra that are not shared with any other bad tetrahedra
+        # These are the "hullfaces"
+
+        # Step 3: Remove bad tetrahedra from the self._triangulation list
+
+        # Step 4: Create new tetrahedra in the cavity by connecting the point with the hull-faces
+        # Hints:
+        # - The tetrahedron-class constructor expects the complete list of all points
+        # that are part of the triangulation (i.e., self._points) and a list of indices in that list,
+        # that define the four vertices of the tetrahedron.
+        # Example: Tetrahedron(self._points, [0, 1, 2, 3]) creates a tetrahedron constructed from the
+        # first four points of the self._points list (which is coincidially the super-tetrahedron)
+        # - The Tetrahedron class has a faces property, which yields all faces of the tetrahedron.
+        # A face is defined by the set of indices in the self._points list
+
+        ### region solution
         # Find the tetrahedra which violate the triangulation if the point is inserted
         invalid_tetrahedra = [tetra for tetra in self._triangulation if tetra.is_point_in_circumsphere(point)]
 
@@ -263,20 +284,19 @@ class BowyerWatsonVisualiser:
         for tetra in invalid_tetrahedra:
             self._triangulation.remove(tetra)
 
-        # add the new vertex to our list of vertices
-        self._vertices[4 + point_idx] = point
-
         # Triangulate the cavity
         for face in hull_faces:
             indices = np.zeros(4, dtype=int)
             indices[1:4] = face
-            indices[0] = point_idx + 4
-            self._triangulation.append(Tetrahedron(self._vertices, indices))
+            indices[0] = point_idx
+            self._triangulation.append(Tetrahedron(self._points, indices))
+
+        ### endregion solution
 
     def _create_super_tetrahedron_points(self):
         # Create the encompassing sphere of all points
-        center = np.mean(self._points, axis=0)
-        radius = np.max(np.linalg.norm(self._points - center, axis=1))
+        center = np.mean(self._points[4:], axis=0)
+        radius = np.max(np.linalg.norm(self._points[4:] - center, axis=1))
 
         # place that sphere within a regular tetrahedron
         tetra_edge_length = 12 * radius / np.sqrt(6)
