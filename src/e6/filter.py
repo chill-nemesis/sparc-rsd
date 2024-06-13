@@ -171,14 +171,14 @@ class ClosingFilter(BaseFilter2D):
 
 def _main():
     # region solution
-    kernel_size = 3
+    kernel_size = 9
 
     blur_filter = MotionBlurFilterX(kernel_size)
     gauss_filter = GaussFilter(kernel_size)
     median_filter = MedianFilter(kernel_size)
-    sobel_filter = SobelFilter(kernel_size)
-    x_sobel_filter = XSobelFilter(kernel_size)
-    y_sobel_filter = YSobelFilter(kernel_size)
+    sobel_filter = SobelFilter(3)
+    x_sobel_filter = XSobelFilter(3)
+    y_sobel_filter = YSobelFilter(3)
     min_filter = ErosionFilter(kernel_size)
     max_filter = DilationFilter(kernel_size)
 
