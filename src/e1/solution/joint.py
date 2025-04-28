@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from e1.joint import Joint3D
 
 import numpy as np
 
@@ -6,55 +6,27 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
-class Joint3D:
-    def __init__(self, axis_of_rotation, length_mm, parent=None):
-        """
-        Initialize a 3D joint.
-
-        :param axis: Local axis of rotation/translation (must be a unit vector)
-        :param length: Fixed length of the link
-        :param parent: Parent joint (None for base)
-        """
-        self.axis_of_rotation = np.array(axis_of_rotation) / np.linalg.norm(axis_of_rotation)  # Normalize
-        self.length_mm = length_mm
-        self.parent = parent
-
-    @abstractmethod
-    def get_transformation_matrix(self, joint_angle_rad):
-        """
-        Compute the local transformation matrix for this joint.
-
-        :param joint_angle_rad: The joint angle in radians
-        :return: 4x4 transformation matrix
-        """
-        raise NotImplementedError()
+class Joint3DSharedImpl(Joint3D):
 
     def get_global_position(self, joint_angles_rad):
         """
         Compute the global (x, y, z) position of this joint.
 
-        :param joint_angles: List of joint angles (one per joint).
+        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
         :return: (x, y, z) coordinates
         """
         if self.parent is None:
             return np.array([0, 0, 0])  # Base joint starts at origin
 
-        # Get cumulative transformation from the parent
-        parent_transform = self.parent.get_cumulative_transformation(joint_angles_rad[:-1])
-        local_transform = self.get_transformation_matrix(joint_angles_rad[-1])
-
-        # Compute global transformation
-        global_transform = parent_transform @ local_transform
-
         # Extract position
-        return global_transform[:3, 3]
+        return self.get_cumulative_transformation(joint_angles_rad)[:3, 3]
 
     def get_cumulative_transformation(self, joint_angles_rad):
         """
-        Compute the cumulative transformation matrix from base to this joint.
+        Compute the cumulative homogeneous transformation matrix from base to this joint.
 
-        :param joint_angles: List of joint angles (one per joint).
-        :return: 4x4 transformation matrix
+        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :return: 4x4 homogenous transformation matrix
         """
         if self.parent is None:
             return np.eye(4)  # Identity matrix for base
@@ -65,7 +37,7 @@ class Joint3D:
         return parent_transform @ local_transform
 
 
-class RevoluteJoint3D(Joint3D):
+class RevoluteJoint3D(Joint3DSharedImpl):
 
     def get_transformation_matrix(self, theta_rad):
         # Compute rotation matrix using Rodrigues' formula
@@ -82,7 +54,7 @@ class RevoluteJoint3D(Joint3D):
         return T
 
 
-class PrismaticJoint3D(Joint3D):
+class PrismaticJoint3D(Joint3DSharedImpl):
 
     def get_transformation_matrix(self, d):
         # Homogeneous transformation matrix (with rotation and translation)

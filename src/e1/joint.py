@@ -1,6 +1,53 @@
 import numpy as np
 
-from e1.solution.joint import Joint3D
+
+from abc import abstractmethod
+
+
+class Joint3D:
+    """Abstract base class for 3D joints."""
+
+    def __init__(self, axis_of_rotation, length_mm, parent=None):
+        """
+        Initialize a 3D joint.
+
+        :param axis: Local axis of rotation/translation (must be a unit vector)
+        :param length: Fixed length of the link
+        :param parent: Parent joint (None for base)
+        """
+        self.axis_of_rotation = np.array(axis_of_rotation) / np.linalg.norm(axis_of_rotation)  # Normalize
+        self.length_mm = length_mm
+        self.parent = parent
+
+    @abstractmethod
+    def get_transformation_matrix(self, joint_angle_rad):
+        """
+        Compute the local transformation matrix for this joint.
+
+        :param joint_angle_rad: The joint angle in radians
+        :return: 4x4 transformation matrix
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_global_position(self, joint_angles_rad):
+        """
+        Compute the global (x, y, z) position of this joint.
+
+        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :return: (x, y, z) coordinates
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_cumulative_transformation(self, joint_angles_rad):
+        """
+        Compute the cumulative homogeneous transformation matrix from base to this joint.
+
+        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :return: 4x4 homogenous transformation matrix
+        """
+        raise NotImplementedError()
 
 
 class RevoluteJoint3D(Joint3D):
