@@ -20,31 +20,31 @@ class Joint3D:
         self.parent = parent
 
     @abstractmethod
-    def get_transformation_matrix(self, joint_angle_rad):
+    def get_transformation_matrix(self, joint_configuration):
         """
         Compute the local transformation matrix for this joint.
 
-        :param joint_angle_rad: The joint angle in radians
+        :param joint_configuration: The joint configuration
         :return: 4x4 transformation matrix
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def get_global_position(self, joint_angles_rad):
+    def get_global_position(self, joint_configurations):
         """
         Compute the global (x, y, z) position of this joint.
 
-        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :param joint_configurations: List of joint configurations (one per joint). Index 0 is the base joint, ... until index -1 describes the joint configuration of this joint.
         :return: (x, y, z) coordinates
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def get_cumulative_transformation(self, joint_angles_rad):
+    def get_cumulative_transformation(self, joint_configurations):
         """
         Compute the cumulative homogeneous transformation matrix from base to this joint.
 
-        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :param joint_configurations: List of joint configurations (one per joint). Index 0 is the base joint, ... until index -1 describes the joint configuration of this joint.
         :return: 4x4 homogenous transformation matrix
         """
         raise NotImplementedError()

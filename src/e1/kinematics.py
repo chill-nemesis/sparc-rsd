@@ -30,7 +30,7 @@ def _main():
         length_mm=3,
         parent=joint2,
     )
-    ee = RevoluteJoint3D(
+    end_effector = RevoluteJoint3D(
         axis_of_rotation=np.asarray([0, 0, 1]),
         length_mm=2,
         parent=joint3,
@@ -42,7 +42,11 @@ def _main():
         lambda frame: np.radians(45 * np.cos(frame / 20)),  # Revolute joint oscillating
         lambda frame: np.radians(0),  # Fixed ee, since we cannot see the rotation anyways
     ]
-    animate_kinematic_chain(ee, [fn(0) for fn in update_functions], update_functions)
+    animate_kinematic_chain(
+        end_effector,
+        [fn(0) for fn in update_functions],
+        update_functions,
+    )
 
 
 if __name__ == "__main__":

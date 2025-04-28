@@ -8,31 +8,31 @@ from matplotlib.animation import FuncAnimation
 
 class Joint3DSharedImpl(Joint3D):
 
-    def get_global_position(self, joint_angles_rad):
+    def get_global_position(self, joint_configurations):
         """
         Compute the global (x, y, z) position of this joint.
 
-        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :param joint_configurations: List of joint configurations (one per joint). Index 0 is the base joint, ... until index -1 describes the joint configuration of this joint.
         :return: (x, y, z) coordinates
         """
         if self.parent is None:
             return np.array([0, 0, 0])  # Base joint starts at origin
 
         # Extract position
-        return self.get_cumulative_transformation(joint_angles_rad)[:3, 3]
+        return self.get_cumulative_transformation(joint_configurations)[:3, 3]
 
-    def get_cumulative_transformation(self, joint_angles_rad):
+    def get_cumulative_transformation(self, joint_configurations):
         """
         Compute the cumulative homogeneous transformation matrix from base to this joint.
 
-        :param joint_angles: List of joint angles (one per joint). Index 0 is the base joint, ... until index -1 describes the joint angle of this joint.
+        :param joint_configurations: List of joint configurations (one per joint). Index 0 is the base joint, ... until index -1 describes the joint configuration of this joint.
         :return: 4x4 homogenous transformation matrix
         """
         if self.parent is None:
             return np.eye(4)  # Identity matrix for base
 
-        parent_transform = self.parent.get_cumulative_transformation(joint_angles_rad[:-1])
-        local_transform = self.get_transformation_matrix(joint_angles_rad[-1])
+        parent_transform = self.parent.get_cumulative_transformation(joint_configurations[:-1])
+        local_transform = self.get_transformation_matrix(joint_configurations[-1])
 
         return parent_transform @ local_transform
 
@@ -64,15 +64,27 @@ class PrismaticJoint3D(Joint3DSharedImpl):
         return T
 
 
-def _get_joint_positions(last_joint, joint_angles_rad):
-    """Traverse back from the last joint to the base to collect positions."""
+def _joints_to_list(joint):
+    """Recursively collect all joints in the kinematic chain."""
     joints = []
-    joint = last_joint
     while joint is not None:
         joints.append(joint)
         joint = joint.parent
-    joints.reverse()  # Ensure base is first, end-effector is last
-    return np.array([joint.get_global_position(joint_angles_rad[: i + 1]) for i, joint in enumerate(joints)])
+    return joints[::-1]  # Reverse to start from base
+
+
+def _get_joint_types(last_joint):
+    # If the joint class contains "prismatic", it is a prismatic joint, otherwise it is a revolute joint.
+    return [
+        "prismatic" if "Prismatic" in joint.__class__.__name__ else "revolute" for joint in _joints_to_list(last_joint)
+    ]
+
+
+def _get_joint_positions(last_joint, joint_angles_rad):
+    """Traverse back from the last joint to the base to collect positions."""
+    return np.array(
+        [joint.get_global_position(joint_angles_rad[: i + 1]) for i, joint in enumerate(_joints_to_list(last_joint))]
+    )
 
 
 def _setup_figure():
@@ -106,12 +118,12 @@ def _set_axis_limits(ax, positions):
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
 
-def _update(frame, last_joint, joint_angles_rad, update_functions, scatter_plot, line_plot, legend_handles):
+def _update(frame, last_joint, joint_configurations, update_functions, scatter_plot, line_plot, legend_handles):
     """Update function for the animation, modifying joint angles based on user-defined functions."""
     for i, update_fn in enumerate(update_functions):
-        joint_angles_rad[i] = update_fn(frame)
+        joint_configurations[i] = update_fn(frame)
 
-    positions = _get_joint_positions(last_joint, joint_angles_rad)
+    positions = _get_joint_positions(last_joint, joint_configurations)
 
     # Update positions
     line_plot.set_data(positions[:, 0], positions[:, 1])
@@ -125,10 +137,11 @@ def _update(frame, last_joint, joint_angles_rad, update_functions, scatter_plot,
     return scatter_plot, line_plot
 
 
-def animate_kinematic_chain(last_joint, joint_angles_rad, update_functions, frames=200, interval=50):
+def animate_kinematic_chain(last_joint, joint_configurations, update_functions, frames=200, interval=50):
     """Animate the kinematic chain in 3D with user-defined joint update functions."""
     fig, ax = _setup_figure()
-    positions = _get_joint_positions(last_joint, joint_angles_rad)
+    positions = _get_joint_positions(last_joint, joint_configurations)
+    joint_types = _get_joint_types(last_joint)
 
     num_joints = len(positions)
     colors = plt.cm.coolwarm(np.linspace(0, 1, num_joints))
@@ -137,15 +150,29 @@ def animate_kinematic_chain(last_joint, joint_angles_rad, update_functions, fram
     (line_plot,) = ax.plot(positions[:, 0], positions[:, 1], positions[:, 2], "black", linewidth=2)
 
     # Plot dynamic joints (colored)
-    scatter_plot = ax.scatter(positions[:, 0], positions[:, 1], positions[:, 2], c=colors, s=100, edgecolors="black")
+    scatter_plot = ax.scatter(
+        positions[:, 0],
+        positions[:, 1],
+        positions[:, 2],
+        c=colors,
+        s=100,
+        edgecolors="black",
+    )
 
     # Create legend handles from scatter points
     legend_handles = [
-        plt.Line2D([0], [0], marker="o", color=colors[i], markersize=8, linestyle="", label=f"Joint {i+1}")
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color=colors[i],
+            markersize=8,
+            linestyle="",
+            label=f"Joint {i+1} end effector ({joint_types[i]})",
+        )
         for i in range(num_joints)
     ]
-    legend_handles[0].set_label("Base")
-    legend_handles[-1].set_label("End Effector")
+
     ax.legend(handles=legend_handles, loc="upper left", fontsize=10)
 
     _set_axis_limits(ax, positions)
@@ -155,7 +182,7 @@ def animate_kinematic_chain(last_joint, joint_angles_rad, update_functions, fram
         _update,
         frames=frames,
         interval=interval,
-        fargs=(last_joint, joint_angles_rad, update_functions, scatter_plot, line_plot, legend_handles),
+        fargs=(last_joint, joint_configurations, update_functions, scatter_plot, line_plot, legend_handles),
         blit=False,
     )
 
