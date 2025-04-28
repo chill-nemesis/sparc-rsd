@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "RSD_Exercise"
+name = "rsd_exercise"
 version = "0.1.0"
 dependencies = ["pydicom", "matplotlib", "numpy", "PySide6", "open3d"]
 authors = [{ name = "Steffen Peikert", email = "steffen.peikert@fau.de" }]
