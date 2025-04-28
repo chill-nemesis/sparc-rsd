@@ -1,10 +1,19 @@
+"""Exercise 1: Kinematic chains
+
+Author: Steffen Peikert, steffen.peikert@fau.de
+Version & Changelog:
+- 1.0 (2025-04-28)
+"""
+
+import argparse
+
 import numpy as np
 
-from e1.joint import RevoluteJoint3D, PrismaticJoint3D, animate_kinematic_chain
+
+from e1.solution.joint import animate_kinematic_chain
 
 
 def _main():
-
     base = base = RevoluteJoint3D([0, 0, 1], 0)
     joint1 = RevoluteJoint3D(
         axis_of_rotation=np.asarray([0, 0, 1]),
@@ -37,4 +46,18 @@ def _main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Kinematic chain animation")
+    parser.add_argument(
+        "--solution",
+        action="store_false",
+        help="Use the solution code for the kinematic chain animation.",
+    )
+
+    args = parser.parse_args()
+
+    if args.solution:
+        from e1.solution.joint import RevoluteJoint3D, PrismaticJoint3D
+    else:
+        from e1.joint import RevoluteJoint3D, PrismaticJoint3D
+
     _main()
