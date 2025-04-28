@@ -49,7 +49,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kinematic chain animation")
     parser.add_argument(
         "--solution",
-        action="store_false",
+        action="store_true",
+        default=False,
         help="Use the solution code for the kinematic chain animation.",
     )
 
