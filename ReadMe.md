@@ -1,6 +1,6 @@
 # RSD Exercises
 
-This repository contains the code for the exercises in *Robotics in Surgery and Diagnostics* from the SPARC Lab at FAU.  
+This repository contains the code for the exercises in *Robotics in Surgery and Diagnostics* from the [SPARC Lab at FAU](https://www.sparc.tf.fau.de).  
 It is organized into dedicated exercise modules for students (e1, e2, ...) to support the corresponding lecture content.
 
 Each module also includes a `solution` folder with a fully implemented solution.  
