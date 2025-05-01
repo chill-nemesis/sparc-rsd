@@ -29,9 +29,10 @@ class Joint3DSharedImpl(Joint3D):
         :return: 4x4 homogenous transformation matrix
         """
         if self.parent is None:
-            return np.eye(4)  # Identity matrix for base
+            parent_transform = np.eye(4)  # Identity matrix for base
+        else:
+            parent_transform = self.parent.get_cumulative_transformation(joint_configurations[:-1])
 
-        parent_transform = self.parent.get_cumulative_transformation(joint_configurations[:-1])
         local_transform = self.get_transformation_matrix(joint_configurations[-1])
 
         return parent_transform @ local_transform

@@ -11,7 +11,7 @@ class Joint3D:
         """
         Initialize a 3D joint.
 
-        :param axis: Local axis of rotation/translation (must be a unit vector)
+        :param axis: Axis of rotation/translation (must be a unit vector) for this joint in global coordinates.
         :param length: Fixed length of the link
         :param parent: Parent joint (None for base)
         """
