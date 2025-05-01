@@ -1,12 +1,21 @@
-from e1.joint import Joint3D
+"""Implements the solution code for exercises 1.
+
+Author: Steffen Peikert, steffen.peikert@fau.de
+Version & Changelog:
+- 1.0 (2025-04-28)
+- 1.1 (2025-05-01): Reorderd imports
+"""
 
 import numpy as np
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+from e1.joint import Joint3D
+
 
 class Joint3DSharedImpl(Joint3D):
+    """Intermediate class that provides shared functionality for revolute and prismatic joints."""
 
     def get_global_position(self, joint_configurations):
         """
