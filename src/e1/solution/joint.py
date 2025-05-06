@@ -44,7 +44,7 @@ class Joint3DSharedImpl(Joint3D):
 
         local_transform = self.get_transformation_matrix(joint_configurations[-1])
 
-        return parent_transform @ local_transform
+        return np.dot(parent_transform, local_transform)
 
 
 class RevoluteJoint3D(Joint3DSharedImpl):
@@ -54,7 +54,7 @@ class RevoluteJoint3D(Joint3DSharedImpl):
         kx, ky, kz = self.axis_of_rotation
         K = np.array([[0, -kz, ky], [kz, 0, -kx], [-ky, kx, 0]])
 
-        R = np.eye(3) + np.sin(theta_rad) * K + (1 - np.cos(theta_rad)) * (K @ K)
+        R = np.eye(3) + np.sin(theta_rad) * K + (1 - np.cos(theta_rad)) * np.dot(K, K)
 
         # Homogeneous transformation matrix (with rotation and translation)
         T = np.eye(4)
