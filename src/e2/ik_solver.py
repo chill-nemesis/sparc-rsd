@@ -10,7 +10,11 @@ class BaseConstraint:
         self.target = np.array(target, dtype=float)
 
     @abstractmethod
-    def compute_jacobian(self, joint: Joint3D, joint_configurations: list | np.ndarray) -> (np.ndarray, np.ndarray):
+    def compute_jacobian(
+        self,
+        joint: Joint3D,
+        joint_configurations: list | np.ndarray,
+    ) -> np.ndarray:
         """Compute the Jacobian for this constraint.
 
         Args:
@@ -18,7 +22,23 @@ class BaseConstraint:
             joint_configurations (list | np.ndarray): Joint configurations.
 
         Returns:
-            tuple(np.ndarray, np.ndarray): The jacobian matrix for the constraint and joint, as well as the error of the last joint (i.e., the joint that is passed in as an argument).
+            np.ndarray: The Jacobian matrix.
+        """
+
+    @abstractmethod
+    def compute_error(
+        self,
+        end_effector: Joint3D,
+        joint_configurations: list | np.ndarray,
+    ) -> np.ndarray:
+        """Compute the error for this constraint.
+
+        Args:
+            end_effector (Joint3D): The end effector joint.
+            joint_configurations (list | np.ndarray): Joint configurations.
+
+        Returns:
+            np.ndarray: The error vector.
         """
 
 
@@ -29,9 +49,17 @@ class PositionConstraint(BaseConstraint):
         self,
         end_effector: Joint3D,
         joint_configurations: list | np.ndarray,
-    ) -> (np.ndarray, np.ndarray):
+    ) -> np.ndarray:
 
         # Take special care of how each joint type influences the error calculation!
+        raise NotImplementedError()
+
+    def compute_error(
+        self,
+        end_effector: Joint3D,
+        joint_configurations: list | np.ndarray,
+    ) -> np.ndarray:
+        # This needs to compute the error between the end effector position and the target position.
         raise NotImplementedError()
 
 

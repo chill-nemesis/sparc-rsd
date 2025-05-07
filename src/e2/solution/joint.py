@@ -1,37 +1,15 @@
 import numpy as np
 
-from abc import abstractmethod
 
 from _internal.rebase_base_class import REBASE_BASE_CLASS
-
-from e1.solution.joint import (
-    Joint3DSharedImpl as E1_Joint3D,
-    RevoluteJoint3D as E1_RevoluteJoint3D,
-    PrismaticJoint3D as E1_PrismaticJoint3D,
-)
+from e2._module_loader import E1_Joint3D, E1_RevoluteJoint3D, E1_PrismaticJoint3D
 
 
+# This extends the joint from exercise 1 with a couple of helper functions
 class Joint3D(E1_Joint3D):
     """
     Abstract base class for 3D joints.
     """
-
-    def __init__(
-        self,
-        *args,
-        axis_forward: np.ndarray = None,
-        **kwargs,
-    ):
-        """
-        Initialize a 3D joint.
-
-        Args:
-            axis_forward (np.ndarray, optional): Forward axis. Defaults to None.
-        """
-        super().__init__(*args, **kwargs)
-        self.forward_axis = axis_forward if axis_forward is not None else self.axis_of_rotation
-
-        self.forward_axis /= np.linalg.norm(self.forward_axis)
 
     @property
     def num_joints(self):
@@ -67,25 +45,6 @@ class Joint3D(E1_Joint3D):
         """
         return self.axis_of_rotation
 
-    @property
-    def local_forward_axis(self):
-        """
-        Get the local forward axis for this joint.
-
-        Returns:
-            np.ndarray: Local forward axis (unit vector)
-        """
-        return self.forward_axis
-
-    def global_forward_axis(self, joint_configurations):
-        """
-        Get the global forward axis for this joint.
-
-        Returns:
-            np.ndarray: Global forward axis (unit vector)
-        """
-        return np.dot(self.get_cumulative_transformation(joint_configurations)[:3, :3], self.forward_axis)
-
     def global_axis_of_rotation(self, joint_configurations):
         """
         Get the global axis of rotation for this joint.
@@ -114,8 +73,11 @@ class Joint3D(E1_Joint3D):
         )
 
 
+# Change the base Joint3D from exercise1 to the update, new Joint3D for exercise 2
 class RevoluteJoint3D(REBASE_BASE_CLASS(E1_RevoluteJoint3D, Joint3D)):
     pass
 
+
+# Change the base Joint3D from exercise1 to the update, new Joint3D for exercise 2
 class PrismaticJoint3D(REBASE_BASE_CLASS(E1_PrismaticJoint3D, Joint3D)):
     pass

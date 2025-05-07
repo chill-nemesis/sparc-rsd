@@ -10,7 +10,11 @@ class BaseConstraint:
         self.target = np.array(target, dtype=float)
 
     @abstractmethod
-    def compute_jacobian(self, joint: Joint3D, joint_configurations: list | np.ndarray) -> (np.ndarray, np.ndarray):
+    def compute_jacobian(
+        self,
+        joint: Joint3D,
+        joint_configurations: list | np.ndarray,
+    ) -> np.ndarray:
         """Compute the Jacobian for this constraint.
 
         Args:
@@ -18,25 +22,51 @@ class BaseConstraint:
             joint_configurations (list | np.ndarray): Joint configurations.
 
         Returns:
-            tuple(np.ndarray, np.ndarray): The jacobian matrix for the constraint and joint, as well as the error of the last joint (i.e., the joint that is passed in as an argument).
+            np.ndarray: The Jacobian matrix.
+        """
+
+    @abstractmethod
+    def compute_error(
+        self,
+        end_effector: Joint3D,
+        joint_configurations: list | np.ndarray,
+    ) -> np.ndarray:
+        """Compute the error for this constraint.
+
+        Args:
+            end_effector (Joint3D): The end effector joint.
+            joint_configurations (list | np.ndarray): Joint configurations.
+
+        Returns:
+            np.ndarray: The error vector.
         """
 
 
 class PositionConstraint(BaseConstraint):
 
+    def compute_error(
+        self,
+        end_effector: Joint3D,
+        joint_configurations: list | np.ndarray,
+    ) -> np.ndarray:
+        ee_pos = end_effector.get_global_position(joint_configurations)
+        return self.target - ee_pos
+
     def compute_jacobian(
         self,
         end_effector: Joint3D,
         joint_configurations: list | np.ndarray,
-    ) -> (np.ndarray, np.ndarray):
+    ) -> np.ndarray:
 
         jacobian = np.zeros((3, end_effector.num_joints))
+
+        ee_pos = end_effector.get_global_position(joint_configurations)
 
         for joint_idx, joint in enumerate(end_effector.kinematic_chain):
             joint_global_axis_of_rotation = joint.global_axis_of_rotation(joint_configurations[: joint_idx + 1])
             joint_global_position = joint.get_global_position(joint_configurations[: joint_idx + 1])
 
-            error = self.target - joint_global_position
+            error = ee_pos - joint_global_position
 
             if isinstance(joint, RevoluteJoint3D):
                 jacobian[:, joint_idx] = np.cross(joint_global_axis_of_rotation, error)
@@ -45,7 +75,7 @@ class PositionConstraint(BaseConstraint):
             else:
                 raise ValueError(f"Unsupported joint type: {joint.__class__.__name__}")
 
-        return jacobian, error
+        return jacobian
 
 
 class DeltaThetaUpdate:
@@ -133,9 +163,10 @@ class JacobianIKSolver:
             jacobian_rows = []
 
             for constraint in constraints:
-                J, end_effector_error = constraint.compute_jacobian(end_effector, config)
-                errors.append(end_effector_error)
-                jacobian_rows.append(J)
+                j_constraint = constraint.compute_jacobian(end_effector, config)
+                error_constraint = constraint.compute_error(end_effector, config)
+                jacobian_rows.append(j_constraint)
+                errors.append(error_constraint)
 
             total_error = np.concatenate(errors)
             if np.linalg.norm(total_error) < self.tolerance:
