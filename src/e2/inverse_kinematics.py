@@ -53,10 +53,6 @@ def _main():
         initial_joint_config,
     )
 
-    # TODO for students:
-    # unstable with larger alpha
-    # implement DLS
-
     animate_kinematic_chain(
         end_effector,
         initial_joint_config,
