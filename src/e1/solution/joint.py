@@ -1,12 +1,21 @@
-from e1.joint import Joint3D
+"""Implements the solution code for exercises 1.
+
+Author: Steffen Peikert, steffen.peikert@fau.de
+Version & Changelog:
+- 1.0 (2025-04-28)
+- 1.1 (2025-05-01): Reorderd imports
+"""
 
 import numpy as np
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+from e1.joint import Joint3D
+
 
 class Joint3DSharedImpl(Joint3D):
+    """Intermediate class that provides shared functionality for revolute and prismatic joints."""
 
     def get_global_position(self, joint_configurations):
         """
@@ -35,7 +44,7 @@ class Joint3DSharedImpl(Joint3D):
 
         local_transform = self.get_transformation_matrix(joint_configurations[-1])
 
-        return parent_transform @ local_transform
+        return np.dot(parent_transform, local_transform)
 
 
 class RevoluteJoint3D(Joint3DSharedImpl):
@@ -45,7 +54,7 @@ class RevoluteJoint3D(Joint3DSharedImpl):
         kx, ky, kz = self.axis_of_rotation
         K = np.array([[0, -kz, ky], [kz, 0, -kx], [-ky, kx, 0]])
 
-        R = np.eye(3) + np.sin(theta_rad) * K + (1 - np.cos(theta_rad)) * (K @ K)
+        R = np.eye(3) + np.sin(theta_rad) * K + (1 - np.cos(theta_rad)) * np.dot(K, K)
 
         # Homogeneous transformation matrix (with rotation and translation)
         T = np.eye(4)

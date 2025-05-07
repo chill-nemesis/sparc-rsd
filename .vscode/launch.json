@@ -11,7 +11,20 @@
 			"program": "${workspaceFolder}/src/e1/kinematics.py",
 			"console": "integratedTerminal",
 			"guiEventLoop": "none", // workaround for the broken event loop in debugpy, see here: https://github.com/microsoft/debugpy/issues/1851
-			// "args": ["--solution"], // uncomment to run the solution code
+			"args": [
+				// "--solution"
+			], // uncomment to run the solution code
+		},
+		{
+			"name": "Exercise 2",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/e2/inverse_kinematics.py",
+			"console": "integratedTerminal",
+			"guiEventLoop": "none",
+			"args": [
+				// "--solution"
+			], // uncomment to run the solution code
 		}
 	]
 }
