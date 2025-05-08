@@ -135,14 +135,29 @@ def _update(frame, last_joint, joint_configurations, update_functions, scatter_p
 
     positions = _get_joint_positions(last_joint, joint_configurations)
 
-    # Update positions
+    # update the forward axis line
+    if hasattr(last_joint, "global_axis_of_rotation"):
+        forward_axis = last_joint.global_axis_of_rotation(joint_configurations)
+        forward_axis_start = last_joint.get_global_position(joint_configurations)
+        forward_axis_end = forward_axis_start + forward_axis * 0.5  # Scale the line length
+
+        positions = np.vstack((positions, forward_axis_end))
+
+    num_scatter_points = len(joint_configurations)
+
+    # Update plots
     line_plot.set_data(positions[:, 0], positions[:, 1])
     line_plot.set_3d_properties(positions[:, 2])
-    scatter_plot._offsets3d = (positions[:, 0], positions[:, 1], positions[:, 2])
+    scatter_plot._offsets3d = (
+        positions[:num_scatter_points, 0],
+        positions[:num_scatter_points, 1],
+        positions[:num_scatter_points, 2],
+    )
 
-    # Update legend colors dynamically
-    for i, handle in enumerate(legend_handles):
-        handle.set_color(scatter_plot.get_facecolor()[i])
+    # # Update legend colors dynamically
+    # for i in range(len(joint_configurations)):
+    #     handle = legend_handles[i]
+    #     handle.set_color(scatter_plot.get_facecolor()[i])
 
     return scatter_plot, line_plot
 
@@ -182,6 +197,19 @@ def animate_kinematic_chain(last_joint, joint_configurations, update_functions, 
         )
         for i in range(num_joints)
     ]
+
+    # Add a line for the forward axis - only if the last_joint has the method global_axis_of_rotation
+    if hasattr(last_joint, "global_axis_of_rotation"):
+        if hasattr(last_joint, "global_axis_of_rotation"):
+            legend_handles.append(
+                plt.Line2D(
+                    [0],
+                    [0],
+                    color="red",
+                    lw=2,
+                    label="Forward Axis",
+                )
+            )
 
     ax.legend(handles=legend_handles, loc="upper left", fontsize=10)
 
