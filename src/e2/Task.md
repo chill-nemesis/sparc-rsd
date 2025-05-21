@@ -1,4 +1,4 @@
-# Exercise 1
+# Exercise 2
 
 In this exercise, we are extending the forward kinematics from exercise 01 and implement the corresponding jacobian inverse kinematics.
 

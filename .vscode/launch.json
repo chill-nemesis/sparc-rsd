@@ -25,6 +25,17 @@
 			"args": [
 				// "--solution"
 			], // uncomment to run the solution code
+		},
+		{
+			"name": "Exercise 4",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/e4/magnetism.py",
+			"console": "integratedTerminal",
+			"guiEventLoop": "none",
+			"args": [
+				// "--solution"
+			], // uncomment to run the solution code
 		}
 	]
 }
