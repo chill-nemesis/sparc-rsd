@@ -1,13 +1,13 @@
 import pickle
 import hashlib
 from pathlib import Path
-import pydicom
+from pydicom import dcmread
 
 
 def _get_dicom_pixel(file_path: Path):
     """Load a single file of dicom pixel data."""
     print(f"Loading file {file_path}")
-    dicom_file = pydicom.read_file(file_path)
+    dicom_file = dcmread(file_path)
     return dicom_file.pixel_array
 
 

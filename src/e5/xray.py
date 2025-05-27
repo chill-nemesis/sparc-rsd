@@ -34,12 +34,7 @@ def create_xray(dicom_data: list[np.ndarray]):
     ##################
     # YOUR CODE HERE #
     ##################
-    ### REGION SOLUTION
-    for dicom_slice in dicom_data:
-        min_image = np.minimum(min_image, dicom_slice)
-        max_image = np.maximum(max_image, dicom_slice)
-        sum_image += dicom_slice
-    ### END REGION SOLUTION
+
 
     min_val = np.min(min_image)
     max_val = np.max(max_image)
@@ -50,7 +45,7 @@ def create_xray(dicom_data: list[np.ndarray]):
 
 
 def _main():
-    dicom_data = read_dicom_data(Path("data/e5/series/"))
+    dicom_data = read_dicom_data(Path("data/series/"))
 
     print(f"Read {len(dicom_data)} entries")
 
