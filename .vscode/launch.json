@@ -44,6 +44,17 @@
 			"program": "${workspaceFolder}/src/e5/xray.py",
 			"console": "integratedTerminal",
 			"guiEventLoop": "none",
+		},
+				{
+			"name": "Exercise 6",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/e6/visualize.py",
+			"console": "integratedTerminal",
+			"guiEventLoop": "none",
+			"args": [
+				// "--solution"
+			], // uncomment to run the solution code
 		}
 	]
 }

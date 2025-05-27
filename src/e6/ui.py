@@ -21,9 +21,8 @@ from matplotlib.colors import Normalize
 import numpy as np
 
 from common.matplotlib_canvas import MPLCanvas
-from common.fancy_colormap import get_fancy_colormap
 
-from e6.base_filter import IFilter2D
+from e6._module_loader import IFilter2D, get_fancy_colormap
 
 
 class E6Window(QMainWindow):
@@ -146,6 +145,9 @@ class E6Window(QMainWindow):
 
 
 def show_window(filter_list: list[IFilter2D], images: list[np.ndarray]):
+    if len(filter_list) == 0:
+        raise ValueError("No filters provided to the filter visualizer.")
+
     app = QApplication(sys.argv)
 
     window = E6Window(filter_list, images)
