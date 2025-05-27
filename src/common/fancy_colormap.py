@@ -3,19 +3,29 @@ from matplotlib.colors import to_rgba, rgb_to_hsv, hsv_to_rgb, ListedColormap
 import numpy as np
 
 
+def _get_fancy_colormap_solution():
+    colormap_data = plt.cm.gray(np.linspace(0, 1, 4000))
+
+    # modify the colormap here
+    # The indices equal the HU+1000
+    # colormap_data[0:100, :] = to_rgba("lightblue")
+
+    colormap_data = _map_color(colormap_data, "lightblue", 0, 100)
+    colormap_data = _map_color(colormap_data, "blue", 100, 500)
+    colormap_data = _map_color(colormap_data, "lightyellow", 1300, 3000)
+    colormap_data = _map_color(colormap_data, "red", 3000, 4000)
+    colormap_data = _map_color(colormap_data, "purple", 1050, 1250)
+
+    return ListedColormap(colormap_data)
+
+
 def get_fancy_colormap():
     colormap_data = plt.cm.gray(np.linspace(0, 1, 4000))
 
     # modify the colormap here
     # The indices equal the HU+1000
     # colormap_data[0:100, :] = to_rgba("lightblue")
-    ### REGION SOLUTION
-    colormap_data = _map_color(colormap_data, "lightblue", 0, 100)
-    colormap_data = _map_color(colormap_data, "blue", 100, 500)
-    colormap_data = _map_color(colormap_data, "lightyellow", 1300, 3000)
-    colormap_data = _map_color(colormap_data, "red", 3000, 4000)
-    colormap_data = _map_color(colormap_data, "purple", 1050, 1250)
-    ### END REGION SOLUTION
+
 
     return ListedColormap(colormap_data)
 
