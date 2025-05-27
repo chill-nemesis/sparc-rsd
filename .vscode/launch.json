@@ -36,6 +36,14 @@
 			"args": [
 				// "--solution"
 			], // uncomment to run the solution code
+		},
+		{
+			"name": "Exercise 5",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/e5/xray.py",
+			"console": "integratedTerminal",
+			"guiEventLoop": "none",
 		}
 	]
 }
