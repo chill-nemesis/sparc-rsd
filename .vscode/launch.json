@@ -45,11 +45,22 @@
 			"console": "integratedTerminal",
 			"guiEventLoop": "none",
 		},
-				{
+		{
 			"name": "Exercise 6",
 			"type": "debugpy",
 			"request": "launch",
 			"program": "${workspaceFolder}/src/e6/visualize.py",
+			"console": "integratedTerminal",
+			"guiEventLoop": "none",
+			"args": [
+				// "--solution"
+			], // uncomment to run the solution code
+		},
+		{
+			"name": "Exercise 7",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/e7/triangulation.py",
 			"console": "integratedTerminal",
 			"guiEventLoop": "none",
 			"args": [
