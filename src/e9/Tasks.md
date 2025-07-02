@@ -2,6 +2,8 @@
 
 In this exercise we are implementing the iterative closest point algorithm to align two pointlcouds.
 
+Please (re-)download the data folder. I updated it wiht a pointcloud necessary for the code to work.
+
 ## Keybindings
 - Space triggers the next iteration
 
