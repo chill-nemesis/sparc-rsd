@@ -66,6 +66,17 @@
 			"args": [
 				// "--solution"
 			], // uncomment to run the solution code
+		},
+		{
+			"name": "Exercise 9",
+			"type": "debugpy",
+			"request": "launch",
+			"program": "${workspaceFolder}/src/e9/registration.py",
+			"console": "integratedTerminal",
+			"guiEventLoop": "none",
+			"args": [
+				"--solution"
+			], // uncomment to run the solution code
 		}
 	]
 }
