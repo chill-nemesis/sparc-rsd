@@ -1,7 +1,7 @@
 from abc import abstractmethod
 import numpy as np
 
-from e2.solution.joint import Joint3D, RevoluteJoint3D, PrismaticJoint3D
+from e1._module_loader import Joint3D, RevoluteJoint3D, PrismaticJoint3D
 
 
 class BaseConstraint:
@@ -49,29 +49,29 @@ class PositionConstraint(BaseConstraint):
         end_effector: Joint3D,
         joint_configurations: list | np.ndarray,
     ) -> np.ndarray:
-        ee_pos = end_effector.get_global_position(joint_configurations)
-        return self.target - ee_pos
+        return self.target - end_effector.get_global_child_from_base(joint_configurations).position
 
     def compute_jacobian(
         self,
         end_effector: Joint3D,
         joint_configurations: list | np.ndarray,
     ) -> np.ndarray:
-
+        # The Jacobian is assembled one joint at a time from the base to the end effector.
+        # Each column describes how this one joint changes the end-effector position.
         jacobian = np.zeros((3, end_effector.num_joints))
 
-        ee_pos = end_effector.get_global_position(joint_configurations)
+        ee_pos = end_effector.get_global_child_from_base(joint_configurations).position
 
         for joint_idx, joint in enumerate(end_effector.kinematic_chain):
-            joint_global_axis_of_rotation = joint.global_axis_of_rotation(joint_configurations[: joint_idx + 1])
-            joint_global_position = joint.get_global_position(joint_configurations[: joint_idx + 1])
-
-            error = ee_pos - joint_global_position
+            partial_config = joint_configurations[: joint_idx + 1]
+            joint_parent_transform = joint.get_global_parent_from_base(partial_config)
+            joint_global_actuation_axis = joint_parent_transform.rotation @ joint.local_actuation_axis
+            joint_global_parent_position = joint_parent_transform.position
 
             if isinstance(joint, RevoluteJoint3D):
-                jacobian[:, joint_idx] = np.cross(joint_global_axis_of_rotation, error)
+                jacobian[:, joint_idx] = np.cross(joint_global_actuation_axis, ee_pos - joint_global_parent_position)
             elif isinstance(joint, PrismaticJoint3D):
-                jacobian[:, joint_idx] = joint_global_axis_of_rotation
+                jacobian[:, joint_idx] = joint_global_actuation_axis
             else:
                 raise ValueError(f"Unsupported joint type: {joint.__class__.__name__}")
 

@@ -13,38 +13,34 @@ from e2._module_loader import (
     animate_kinematic_chain,
     JacobianIKSolver,
     PositionConstraint,
+    DLSJacobianUpdate,
 )
 
 
 def _main():
-    base = base = RevoluteJoint3D([0, 0, 1], 0)
+    base = RevoluteJoint3D(
+        actuation_axis=np.asarray([0, 0, 1]),
+        link_offset_mm=np.asarray([2.0, 0.0, 0.0]),
+    )
     joint1 = PrismaticJoint3D(
-        axis_of_rotation=np.asarray([0, 0, 1]),
-        length_mm=3,
+        actuation_axis=np.asarray([1, 0, 0]),
+        link_offset_mm=np.asarray([0.0, 0.0, 3.0]),
         parent=base,
     )
-    joint2 = RevoluteJoint3D(
-        axis_of_rotation=np.asarray([1, 0, 0]),
-        length_mm=1.5,
+    end_effector = RevoluteJoint3D(
+        actuation_axis=np.asarray([0, 1, 0]),
+        link_offset_mm=np.asarray([2.0, 0.0, 0.0]),
         parent=joint1,
     )
-    joint3 = RevoluteJoint3D(
-        axis_of_rotation=np.asarray([0, 1, 0]),
-        length_mm=1.5,
-        parent=joint2,
-    )
-    end_effector = RevoluteJoint3D(
-        axis_of_rotation=np.asarray([1, 0, 0]),
-        length_mm=1,
-        parent=joint3,
+
+    solver = JacobianIKSolver(
+        # delta_theta_update=DLSJacobianUpdate(),
     )
 
-
-    solver = JacobianIKSolver()
-
-    initial_joint_config = [0, 0, 0, 0, 0]
+    initial_joint_config = [0, 0, 0]
     constraints = [
-        PositionConstraint([2, 0, 0]),
+        PositionConstraint([5, 0, 4.5]),
+        # PositionConstraint([0, 5, 4.5]),
     ]
 
     _, intermediate_configs = solver.solve(
@@ -60,8 +56,6 @@ def _main():
             lambda i: intermediate_configs[min(i, len(intermediate_configs) - 1)][0],
             lambda i: intermediate_configs[min(i, len(intermediate_configs) - 1)][1],
             lambda i: intermediate_configs[min(i, len(intermediate_configs) - 1)][2],
-            lambda i: intermediate_configs[min(i, len(intermediate_configs) - 1)][3],
-            lambda i: intermediate_configs[min(i, len(intermediate_configs) - 1)][4],
         ],
         frames=len(intermediate_configs) + 10,
     )
