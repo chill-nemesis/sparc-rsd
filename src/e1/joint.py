@@ -93,6 +93,8 @@ class Joint3D:
         Returns:
             Transformation: Local transform describing only the joint motion.
         """
+        # This is overwritten in the dedicated revolute and prismatic joint subclasses.
+        # Do NOT implement here.
         raise NotImplementedError()
 
     def get_local_child_from_parent(self, joint_configuration) -> math.Transformation:
