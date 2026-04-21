@@ -5,7 +5,10 @@ from e1._module_loader import Joint3D, RevoluteJoint3D, PrismaticJoint3D
 
 
 class BaseConstraint:
-    def __init__(self, target: np.ndarray) -> None:
+    def __init__(
+        self,
+        target: np.ndarray,
+    ) -> None:
 
         self.target = np.array(target, dtype=float)
 

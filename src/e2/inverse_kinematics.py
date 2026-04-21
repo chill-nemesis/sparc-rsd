@@ -39,7 +39,7 @@ def _main():
 
     initial_joint_config = [0, 0, 0]
     constraints = [
-        PositionConstraint([5, 0, 4.5]),
+        PositionConstraint([4, 2, 4.5]),
         # PositionConstraint([0, 5, 4.5]),
     ]
 
